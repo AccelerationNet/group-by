@@ -1,0 +1,26 @@
+= group-by = 
+A Common Lisp library to help group data into trees (of various
+formats) based on common/shared values
+
+
+== API ==
+=== group-by ===
+groups the list into an alist using the key function and value function to group by key,
+with a list of all values for that key.
+
+key is used to determine the key in the a-list <br />
+value is used to determin the value in the a-list <br />
+key-fn is passed as the :key to assoc (essentially the key of your key) <br />
+test is passed as the :test to assoc <br />
+
+eg: (group-by '((a 1 2) (a 3 4) (b 5 6)))
+ => ((A (1 2) (3 4)) (B (5 6)))
+
+eg: (group-by '((a 1 2) (a 3 4) (b 5 6)) :value #'identity)
+ => ((A (A 1 2) (A 3 4)) (B (B 5 6)))
+
+
+=== grouped-list ===
+
+== Examples ==
+See the examples file and the tests for running examples
