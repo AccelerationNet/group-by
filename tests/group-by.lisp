@@ -43,7 +43,7 @@ the vector ALPHABET.
 			   (iter (for i from 1 to depth)
 				 (collect
 				     (case (mod i 2)
-				       (0 (arnesi:random-string
+				       (0 (random-string
 					   (truncate (+ 1 (/ num-rows (length alphabet) 3)))
 					   alphabet))
 				       (1 (random (max (/ num-rows 10) 3))))))))))
