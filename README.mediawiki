@@ -2,7 +2,6 @@
 A Common Lisp library to help group data into trees (of various
 formats) based on common/shared values
 
-
 == API ==
 
 === group-by ===
@@ -11,7 +10,7 @@ groups the list into an alist using the key function and value function to group
 with a list of all values for that key.
 
 ''key'': is used to determine the key in the a-list <br />
-''value'': is used to determin the value in the a-list <br />
+''value'': is used to determine the value in the a-list <br />
 ''key-fn'': is passed as the :key to assoc (essentially the key of your key) <br />
 ''test'': is passed as the :test to assoc <br />
 
@@ -36,6 +35,8 @@ The implementation doesnt change the output, but it does change
 the performance characteristics of the grouped-object (see:
 grouped-list-speed-tester for help deciding which to use)
 
+----
+
 <pre>
 For the following docs consider the grouped list (as from examples)
 
@@ -58,15 +59,23 @@ grouped-list
 </pre>
 
 ==== key-value ====
+
 Returns the key-value that this grouped-list represents
 
 nil for the root
-the key we are grouping under otherwise
+the key we are grouping under otherwise 
+
+EG: the <gl russ> node returns the string "russ"
 
 ==== child-groupings ====
+
 Returns the direct child grouped-lists of the current grouped-list
 
+If called on the root grouped list, will return a list of (&lt;gl russ> &lt;gl bob>) <br />
+If called on the "russ" grouped list, will return a list of (&lt;gl PROJ-A> &lt;gl PROJ-B> &lt;gl PROJ-C>) <br />
+
 ==== items-in-group ====
+
 Returns all the items in a grouped list. 
 
 ''key-values'':If specified, return only items that match
@@ -86,5 +95,6 @@ suggested that you use make-grouped-list unless you have a good reason
 not to (and I cannot think of one currently).
 
 == Examples ==
- * The examples file contains some examples increasing in complexity 
- * The tests file also contains running examples
+
+* The [https://github.com/bobbysmith007/group-by/blob/master/examples/examples.lisp#L1 examples file] contains some examples increasing in complexity 
+* [https://github.com/bobbysmith007/group-by/blob/master/tests/group-by.lisp#L83 The tests file also contains running examples]
