@@ -62,10 +62,10 @@ grouped-list
 
 Returns the key-value that this grouped-list represents
 
-nil for the root
-the key we are grouping under otherwise 
+nil for the root <br />
+the key we are grouping under otherwise  <br />
 
-EG: the <gl russ> node returns the string "russ"
+EG: the &lt;gl russ&gt; node returns the string "russ"
 
 ==== child-groupings ====
 
