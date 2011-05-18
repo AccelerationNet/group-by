@@ -5,15 +5,16 @@
 	   :grouped-list
 	   :make-grouped-list
 	   :add-item-to-grouping
-	   :items-in-group
-	   :child-groupings
 	   :key-value
+	   :child-groupings
+	   :items-in-group
 	   :parent-grouping
 	   :keys :tests
 	   :make-child-grouped-list
 	   :group-by-repeated
 	   :group-by-repeated-in-hash-table
-	   :group-by-repeated-in-tree))
+	   :group-by-repeated-in-tree
+	   :grouped-list-speed-tester))
 
 (in-package :group-by)
 
@@ -135,7 +136,7 @@ tests is a list of test functions to use to compare the keys (default is #'equal
 	(finally (let ((data (gethash key node)))
 		   (push item data)
 		   (setf (gethash key node) data))))
-  item)
+  root)
 
 (defun group-by-repeated-in-hash-table (list &key keys tests)
   "returns
@@ -176,11 +177,21 @@ tests is a list of hashtable tests to use (default is 'equal)
   (:documentation "This class represents a list that we have grouped by multiple key values
      ala one of the group-by-repeatedly functions "))
 
-(defun make-grouped-list (inp &key key-value tests keys (grouping-implementation :alist))
-  "Given a list of input produce a grouped-list object that contains
-   that has the given tree of data"
+(defun make-grouped-list (inp &key tests keys (grouping-implementation :alist))
+  "Given a list of input, produce a grouped-list CLOS object that contains
+the original list, configuration about the groupings and the result tree
+of grouped-list objects
+
+''keys'': a list of keys to group by<br />
+''tests'': a list of tests to compare the keys with<br />
+
+''grouping-implmentation'': What data structure should be used to perform the grouping<br />
+  '':alist, :tree , :hash-table''<br />
+  The implementation doesnt change the output, but it does change
+  the performance characteristics of the grouped-object (see:
+  grouped-list-speed-tester for help deciding which to use)
+  "
   (make-instance 'grouped-list
-		 :key-value key-value
 		 :tests tests
 		 :keys keys
 		 :grouping-implementation grouping-implementation
@@ -199,7 +210,8 @@ tests is a list of hashtable tests to use (default is 'equal)
 
 (defmethod add-item-to-grouping (item (gl grouped-list))
   "puts a new item in the grouping of the grouped list (but not in the original list)"
-  (categorize-item item (grouped-list gl) :keys (keys gl) :tests (tests gl)))
+  (setf (grouped-list gl)
+	(categorize-item item (grouped-list gl) :keys (keys gl) :tests (tests gl))))
 
 (defmethod %group-subgroups ((l list) key-value test &optional default)
   "Returns the sub groups for the different grouping implementations"
@@ -313,45 +325,3 @@ tests is a list of hashtable tests to use (default is 'equal)
 			:grouping-implementation :alist)))
 	   (when actions (funcall actions gl)))
 	 )))
-
-#| THIS IS SPEED TESTING CODE FOR GROUPING 22000 CLOS OBJECTS IN DEPTH 4
-   THERE IS MORE SPEED TESTING CODE FOR GROUPING RANDOM VECTORS IN THE
-   TEST FILE FOR THIS
-
-GAINESVILLE-CARBON> (defvar *h* (occupied-homes 2006))
-(let ((keys (list #'zip #'age-range #'sqft-range (compose #'parse-integer #'beds)))
-      (tests (list #'equal #'eql #'eql #'eql))
-      (hash-tests (list 'equal 'eql 'eql 'eql)))
-  (group-by::grouped-list-speed-tester
-   :list *h* :keys keys
-   :tests tests :hash-tests hash-tests
-   :iterations 10))
-
-HASH-TABLE Implementation
-Evaluation took:
-  1.271 seconds of real time
-  1.270000 seconds of total run time (1.250000 user, 0.020000 system)
-  [ Run times consist of 0.110 seconds GC time, and 1.160 seconds non-GC time. ]
-  99.92% CPU
-  3,167,500,800 processor cycles
-  54,902,656 bytes consed
-
-TREE Implementation
-Evaluation took:
-  1.849 seconds of real time
-  1.840000 seconds of total run time (1.800000 user, 0.040000 system)
-  [ Run times consist of 0.110 seconds GC time, and 1.730 seconds non-GC time. ]
-  99.51% CPU
-  4,610,785,747 processor cycles
-  27,100,208 bytes consed
-  
-ALIST Implementation
-Evaluation took:
-  1.767 seconds of real time
-  1.770000 seconds of total run time (1.750000 user, 0.020000 system)
-  [ Run times consist of 0.050 seconds GC time, and 1.720 seconds non-GC time. ]
-  100.17% CPU
-  4,406,394,998 processor cycles
-  22,615,792 bytes consed
-
-|#

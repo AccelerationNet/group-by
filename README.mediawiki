@@ -4,23 +4,87 @@ formats) based on common/shared values
 
 
 == API ==
+
 === group-by ===
+
 groups the list into an alist using the key function and value function to group by key,
 with a list of all values for that key.
 
-key is used to determine the key in the a-list <br />
-value is used to determin the value in the a-list <br />
-key-fn is passed as the :key to assoc (essentially the key of your key) <br />
-test is passed as the :test to assoc <br />
+''key'': is used to determine the key in the a-list <br />
+''value'': is used to determin the value in the a-list <br />
+''key-fn'': is passed as the :key to assoc (essentially the key of your key) <br />
+''test'': is passed as the :test to assoc <br />
 
-eg: (group-by '((a 1 2) (a 3 4) (b 5 6)))
- => ((A (1 2) (3 4)) (B (5 6)))
+eg: (group-by '((a 1 2) (a 3 4) (b 5 6)))<br />
+=> ((A (1 2) (3 4)) (B (5 6)))<br />
 
-eg: (group-by '((a 1 2) (a 3 4) (b 5 6)) :value #'identity)
- => ((A (A 1 2) (A 3 4)) (B (B 5 6)))
+eg: (group-by '((a 1 2) (a 3 4) (b 5 6)) :value #'identity)<br />
+=> ((A (A 1 2) (A 3 4)) (B (B 5 6)))<br />
 
+=== make-grouped-list, grouped-list ===
 
-=== grouped-list ===
+Given a list of input, produce a grouped-list CLOS object that contains
+the original list, configuration about the groupings and the result tree
+of grouped-list objects
+
+''keys'': a list of keys to group by<br />
+''tests'': a list of tests to compare the keys with<br />
+
+''grouping-implmentation'': What data structure should be used to perform the grouping<br />
+'':alist, :tree , :hash-table''<br />
+The implementation doesnt change the output, but it does change
+the performance characteristics of the grouped-object (see:
+grouped-list-speed-tester for help deciding which to use)
+
+<pre>
+For the following docs consider the grouped list (as from examples)
+
+grouped-list
+  russ
+    PROJ-A
+      (list of timeclock records)
+    PROJ-B
+      (list of timeclock records)
+    PROJ-C
+      (list of timeclock records)
+  bob
+    PROJ-A
+      (list of timeclock records)
+    PROJ-B
+      (list of timeclock records)
+    PROJ-C
+      (list of timeclock records)
+
+</pre>
+
+==== key-value ====
+Returns the key-value that this grouped-list represents
+
+nil for the root
+the key we are grouping under otherwise
+
+==== child-groupings ====
+Returns the direct child grouped-lists of the current grouped-list
+
+==== items-in-group ====
+Returns all the items in a grouped list. 
+
+''key-values'':If specified, return only items that match
+
+When called on the root (items-in-group gl) of a grouped-list returns all 
+of the items that list groups (leaf nodes of the tree).
+
+When called as (items-in-group gl "russ" :proj-a) returns the items under
+the key proj-A that are found under toplevel key "russ"
+
+=== group-by-repeated, group-by-repeated-in-hash-table, group-by-repeated-in-tree ===
+
+Three functions used in implementing grouped-lists. While these can be
+used directly with the same set of arguments as make-grouped-list, the
+results are more raw, and harder to navigate.  It is therefore
+suggested that you use make-grouped-list unless you have a good reason
+not to (and I cannot think of one currently).
 
 == Examples ==
-See the examples file and the tests for running examples
+ * The examples file contains some examples increasing in complexity 
+ * The tests file also contains running examples
