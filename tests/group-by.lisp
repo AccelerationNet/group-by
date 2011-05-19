@@ -109,13 +109,32 @@ the vector ALPHABET.
            (assert-equal 25 row-cnt)))
     ))
 
+(define-test basic-grouped-list
+  (let* ((data (second (test-data 25 3)))
+         (res (make-grouped-list
+               (second (test-data 25 3))
+               :keys (list #'(lambda (s) (elt s 1))))))
+    (iter
+      (for gl in (child-groupings res))
+      (for kv = (key-value gl))
+      (iter (for item in (items-in-group gl))
+        (assert-equal kv (elt item 1))))
+    (assert-equal 25 (length (items-in-group res)))
+    ))
+
+(define-test basic-grouped-list2
+  (apply #'make-instance 'grouped-list (test-data 25 3)))
+
 (define-test run-accuracy-tests
   (let ((num-rows 1000) (depth 5))
     (labels ((assertions (g1 g2 g3)
                ;; all grouped lists contain the same number of children
-               (assert-true (apply #'= (mapcar
-                                        (lambda (x) (length (items-in-group x)))
-                                        (list g1 g2 g3))))
+               (assert-equal
+                   (length (items-in-group g1))
+                   (length (items-in-group g2)))
+               (assert-equal
+                   (length (items-in-group g2))
+                   (length (items-in-group g3)))
 
                ;; all grouped lists contain the same data
                (assert-true (null (set-difference
@@ -141,7 +160,7 @@ the vector ALPHABET.
                (assertions g1 g2 g3)
                (let* ((k1 (child-groupings g1))
                       (k2 (child-groupings g2))
-                      (k3 (child-groupings g2))
+                      (k3 (child-groupings g3))
                       (pred (when k1
                               (if (numberp (key-value (first k1)))
                                   #'<
@@ -150,6 +169,7 @@ the vector ALPHABET.
                    (setf k1 (sort k1 pred :key #'key-value))
                    (setf k2 (sort k2 pred :key #'key-value))
                    (setf k3 (sort k3 pred :key #'key-value)))
+                 ;(break "~A" (list k1 k2 k3))
                  (iter (for kg1 in k1)
                        (for kg2 in k2)
                        (for kg3 in k3)
@@ -181,7 +201,6 @@ the vector ALPHABET.
        (iter (for data in test-data)
              (make-test-data-instance data :grouping-implementation :alist))))))
 
-(define-test run-creation-speed-tests
-  (%run-creation-speed-tests))
+;(define-test run-creation-speed-tests (%run-creation-speed-tests))
 
 (run-tests)
