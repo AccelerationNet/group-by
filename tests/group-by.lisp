@@ -52,8 +52,8 @@ the vector ALPHABET.
    :tests (iter (for i from 1 to depth)
                 (collect
                     (case (mod i 2)
-                      (0 #'string=)
-                      (1 #'=))))))
+                      (0 #'equalp)
+                      (1 #'eql))))))
 
 (defmethod print-object ((o grouped-list) s)
   ;; This is way slow so dont have this in live code and you might wish to undefine it
@@ -64,10 +64,12 @@ the vector ALPHABET.
     (format s "num-data:~a " (length (items-in-group o)))))
 
 (defun make-test-data-instance (test-data &rest other-keywords)
-  (let ((args (append (list 'grouped-list)
-                      test-data
-                      other-keywords)))
-    (apply #'make-instance args)))
+  (let* ((args (append (list 'grouped-list)
+                       test-data
+                       other-keywords))
+         (o (apply #'make-instance args)))
+    o
+    ))
 
 (defparameter +test-timeclock-data+
   `(("Russ" 1 "time on proj A")
@@ -127,23 +129,17 @@ the vector ALPHABET.
 
 (define-test run-accuracy-tests
   (let ((num-rows 1000) (depth 5))
-    (labels ((assertions (g1 g2 g3)
+    (labels ((assertions (g1 g2)
                ;; all grouped lists contain the same number of children
                (assert-equal
                    (length (items-in-group g1))
                    (length (items-in-group g2)))
-               (assert-equal
-                   (length (items-in-group g2))
-                   (length (items-in-group g3)))
 
                ;; all grouped lists contain the same data
                (assert-true (null (set-difference
-                                   (set-difference
                                     (items-in-group g1)
                                     (items-in-group g2)
-                                    :test #'equalp )
-                                   (items-in-group g3)
-                                   :test #'equalp)))
+                                    :test #'equalp )))
 
                ;; assert that all children should actually be in this group
                (when (parent-grouping g1)
@@ -155,30 +151,26 @@ the vector ALPHABET.
                              (assert-true (funcall test (funcall key item) pk))))))))
 
              ;; A function to run the tests on each sub grouping tree
-             (recursert (g1 g2 g3)
+             (recursert (g1 g2)
                ;;(break "recursert:~%~a~%~a~%~a" g1 g2 g3)
-               (assertions g1 g2 g3)
+               (assertions g1 g2)
                (let* ((k1 (child-groupings g1))
                       (k2 (child-groupings g2))
-                      (k3 (child-groupings g3))
                       (pred (when k1
                               (if (numberp (key-value (first k1)))
                                   #'<
                                   #'string<))))
                  (when k1
                    (setf k1 (sort k1 pred :key #'key-value))
-                   (setf k2 (sort k2 pred :key #'key-value))
-                   (setf k3 (sort k3 pred :key #'key-value)))
+                   (setf k2 (sort k2 pred :key #'key-value)))
                  ;(break "~A" (list k1 k2 k3))
                  (iter (for kg1 in k1)
                        (for kg2 in k2)
-                       (for kg3 in k3)
-                       (recursert kg1 kg2 kg3)))))
+                       (recursert kg1 kg2)))))
       (let* ((data (test-data num-rows depth))
-             (lgl (make-test-data-instance data :grouping-implementation :alist))
-             (tgl (make-test-data-instance data :grouping-implementation :hash-table))
-             (hgl (make-test-data-instance data :grouping-implementation :tree)))
-        (recursert lgl tgl hgl)))))
+             (lgl (make-test-data-instance data :grouping-implementation :list))
+             (hgl (make-test-data-instance data :grouping-implementation :hash-table)))
+        (recursert lgl hgl)))))
 
 (defun %run-creation-speed-tests (&key (num-rows 1000) (depth 5) (times 10))
   (macrolet ((time-to-log (&body body)
@@ -188,19 +180,18 @@ the vector ALPHABET.
     (let ((test-data (iter (for i from 1 to times)
                            (collect (test-data num-rows depth)))))
       (info "Grouping Implentation Speed Tests" )
-      (info "~%~%HASH-TABLE Implementation~%" )
+      (info "~%HASH-TABLE Implementation~%" )
       (time-to-log
        (iter (for data in test-data)
              (make-test-data-instance data :grouping-implementation :hash-table)))
-      (info "~%~%TREE Implementation~%" )
+      
+      (info "~%LIST Implementation~%" )
       (time-to-log
        (iter (for data in test-data)
-             (make-test-data-instance data :grouping-implementation :tree)))
-      (info "~%~%ALIST Implementation~%" )
-      (time-to-log
-       (iter (for data in test-data)
-             (make-test-data-instance data :grouping-implementation :alist))))))
+             (make-test-data-instance data :grouping-implementation :list)))
+      
+      )))
 
-;(define-test run-creation-speed-tests (%run-creation-speed-tests))
+(define-test run-creation-speed-tests (%run-creation-speed-tests))
 
-(run-tests)
+(run-tests )

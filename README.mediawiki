@@ -30,7 +30,7 @@ of grouped-list objects
 ''tests'': a list of tests to compare the keys with<br />
 
 ''grouping-implmentation'': What data structure should be used to perform the grouping<br />
-'':alist, :tree , :hash-table''<br />
+'':list, :hash-table''<br />
 The implementation doesnt change the output, but it does change
 the performance characteristics of the grouped-object (see:
 grouped-list-speed-tester for help deciding which to use)

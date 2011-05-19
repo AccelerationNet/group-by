@@ -83,25 +83,29 @@ eg: (group-by '((a 1 2) (a 3 4) (b 5 6)))
 (defclass grouped-list ()
   ((orig-list :accessor orig-list :initarg :orig-list :initform nil)
    (grouping-implementation
-    :accessor grouping-implementation :initarg :grouping-implementation :initform :alist
+    :accessor grouping-implementation :initarg :grouping-implementation :initform :list
     :documentation
-    "What data structure should be used to perform the grouping
-       :alist, :tree , :hash-table")
+    "What data structure should be used to perform the grouping :list, :hash-table")
    (keys :accessor keys :initarg :keys :initform nil
          :documentation "A list of key functions we will use to group the list")
    (tests :accessor tests :initarg :tests :initform nil
           :documentation "A list of test functions we will use to test key equality
       tree: defaults to #'equal
       hash-table: this be a single hash-equality symbol (defaults to 'equal)")
-   (child-groupings :accessor child-groupings :initarg :child-groupings :initform nil)
+   (%child-groupings :accessor %child-groupings :initarg :%child-groupings :initform nil)
    (%items :accessor %items :initarg :%items :initform nil)
-   (child-map :accessor child-map :initarg :child-map :initform nil)
    (parent-grouping :accessor parent-grouping :initarg :parent :initform nil
     :documentation "If this is a subgrouping of another grouped-list, what is the parent grouping we are apart of (mostly for testing)")
    (key-value :accessor key-value :initarg :key-value :initform nil
     :documentation "If this is a subgrouping of another grouped-list, what is the key this grouped-list represents in the parent grouping (mostly for testing)"))
   (:documentation "This class represents a list that we have grouped by multiple key values
      ala one of the group-by-repeatedly functions "))
+
+(defmethod child-groupings ((gl grouped-list))
+  (case (grouping-implementation gl)
+    (:hash-table (iter (for (k v) in-hashtable (%child-groupings gl))
+                   (collect v)))
+    (T (%child-groupings gl))))
 
 (defun make-grouped-list (inp &key tests keys (grouping-implementation :alist))
   "Given a list of input, produce a grouped-list CLOS object that contains
@@ -126,13 +130,19 @@ of grouped-list objects
 (defmethod initialize-instance :after ((o grouped-list) &key list &allow-other-keys)
   (unless (listp (keys o)) (setf (keys o) (list (keys o))))
   (unless (listp (tests o)) (setf (tests o) (list (tests o))))
+  (when (eql :hash-table (grouping-implementation o))
+    (setf (%child-groupings o)
+          (make-hash-table :test (or (first (tests o)) 'equal))))
+
   (when list ;; only do this if we are not a child-grouped-list
     (setf (orig-list o) list)
     (iter (for x in list)
-    (add-item-to-grouping x o))))
+      (add-item-to-grouping x o))))
 
 (defun find-single-sub-category (gl key-value &key test)
-  (find key-value (child-groupings gl) :key #'key-value :test test))
+  (case (grouping-implementation gl)
+      (:hash-table (gethash key-value (%child-groupings gl)))
+      (t (find key-value (%child-groupings gl) :key #'key-value :test test))))
 
 (defmethod categorize-item (item (root grouped-list) &key &allow-other-keys)
   (iter
@@ -152,7 +162,7 @@ of grouped-list objects
 
 (defmethod add-item-to-grouping (item (gl grouped-list))
   "puts a new item in the grouping of the grouped list (but not in the original list)"
-  (categorize-item item gl :keys (keys gl) :tests (tests gl)))
+  (categorize-item item gl))
 
 (defmethod %grouping-items ((gl grouped-list))
   "Returns the items in a given group"
@@ -170,7 +180,10 @@ of grouped-list objects
             :grouping-implementation (grouping-implementation gl)
             :parent-grouping gl
             :key-value key-value)))
-    (push c (child-groupings gl))
+    (case (grouping-implementation gl)
+      (:hash-table
+       (setf (gethash key-value (%child-groupings gl)) c))
+      (t (push c (%child-groupings gl))))
     c))
 
 (defmethod items-in-group ((gl grouped-list) &rest key-values)
@@ -181,7 +194,7 @@ of grouped-list objects
       (for key in key-values)
       (for test = (or (first tests) #'equal))
       (setf tests (rest tests))
-      (setf subgroup (find-single-sub-category gl key :test test)))
+      (setf subgroup (find-single-sub-category subgroup key :test test)))
 
     ;; Get all the items for that subgrouping (for alists this is a list we just produced)
     ;; and that list will simply pass through
@@ -202,17 +215,10 @@ of grouped-list objects
                     :list list :keys keys :tests hash-tests
                     :grouping-implementation :hash-table)))
            (when actions (funcall actions gl)))))
-  (format *trace-output* "~%~%TREE Implementation~%" )
+  (format *trace-output* "~%~%LIST Implementation~%" )
   (time
    (iter (for i from 1 to iterations)
          (let ((gl (make-instance 'grouped-list :list list :keys keys :tests tests
-                        :grouping-implementation :tree)))
-           (when actions (funcall actions gl)))
-         ))
-  (format *trace-output* "~%~%ALIST Implementation~%" )
-  (time
-   (iter (for i from 1 to iterations)
-         (let ((gl (make-instance 'grouped-list :list list :keys keys :tests tests
-                        :grouping-implementation :alist)))
+                        :grouping-implementation :list)))
            (when actions (funcall actions gl)))
          )))
