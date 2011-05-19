@@ -17,7 +17,7 @@ the vector ALPHABET.
         (with alphabet-length = (length alphabet))
         (for i below length)
         (setf (cl:aref id i)
-	      (cl:aref alphabet (random alphabet-length)))
+              (cl:aref alphabet (random alphabet-length)))
         (finally (return id))))
 
 (defun info (message &rest arguments)
@@ -35,25 +35,25 @@ the vector ALPHABET.
   (list
    :list
    (let ((alphabet (if (< num-rows (length +lower-case-ascii-alphabet+))
-		       (subseq +lower-case-ascii-alphabet+
-			       0 (floor (+ 1 (/ num-rows 3))))
-		       +lower-case-ascii-alphabet+)))
+                       (subseq +lower-case-ascii-alphabet+
+                               0 (floor (+ 1 (/ num-rows 3))))
+                       +lower-case-ascii-alphabet+)))
      (iter (for i from 1 to num-rows)
-	   (collect (apply #'vector
-			   (iter (for i from 1 to depth)
-				 (collect
-				     (case (mod i 2)
-				       (0 (random-string
-					   (truncate (+ 1 (/ num-rows (length alphabet) 3)))
-					   alphabet))
-				       (1 (random (max (/ num-rows 10) 3))))))))))
+           (collect (apply #'vector
+                           (iter (for i from 1 to depth)
+                                 (collect
+                                     (case (mod i 2)
+                                       (0 (random-string
+                                           (truncate (+ 1 (/ num-rows (length alphabet) 3)))
+                                           alphabet))
+                                       (1 (random (max (/ num-rows 10) 3))))))))))
    :keys (iter (for i from 0 below depth)
-	       (collect (alexandria:rcurry #'elt i)))
+               (collect (alexandria:rcurry #'elt i)))
    :tests (iter (for i from 1 to depth)
-		(collect
-		    (case (mod i 2)
-		      (0 #'string=)
-		      (1 #'=))))))
+                (collect
+                    (case (mod i 2)
+                      (0 #'string=)
+                      (1 #'=))))))
 
 (defmethod print-object ((o grouped-list) s)
   ;; This is way slow so dont have this in live code and you might wish to undefine it
@@ -65,8 +65,8 @@ the vector ALPHABET.
 
 (defun make-test-data-instance (test-data &rest other-keywords)
   (let ((args (append (list 'grouped-list)
-		      test-data
-		      other-keywords)))
+                      test-data
+                      other-keywords)))
     (apply #'make-instance args)))
 
 (defparameter +test-timeclock-data+
@@ -97,89 +97,89 @@ the vector ALPHABET.
 
 (define-test basic-group-by-2
   (let* ((data (second (test-data 25 3)))
-	 (res (group-by (second (test-data 25 3))
-			:key #'(lambda (s) (elt s 1))
-			:value #'identity
-			:test #'string-equal)))
+         (res (group-by (second (test-data 25 3))
+                        :key #'(lambda (s) (elt s 1))
+                        :value #'identity
+                        :test #'string-equal)))
     (iter (for (k . data) in res)
-	  (iter (for s in data)
-		(assert-equal k (elt s 1)))
-	  (summing (length data) into row-cnt)
-	  (finally
-	   (assert-equal 25 row-cnt)))
+          (iter (for s in data)
+                (assert-equal k (elt s 1)))
+          (summing (length data) into row-cnt)
+          (finally
+           (assert-equal 25 row-cnt)))
     ))
 
 (define-test run-accuracy-tests
   (let ((num-rows 1000) (depth 5))
     (labels ((assertions (g1 g2 g3)
-	       ;; all grouped lists contain the same number of children
-	       (assert-true (apply #'= (mapcar
-					(lambda (x) (length (items-in-group x)))
-					(list g1 g2 g3))))
-	     
-	       ;; all grouped lists contain the same data
-	       (assert-true (null (set-difference
-				   (set-difference
-				    (items-in-group g1)
-				    (items-in-group g2)
-				    :test #'equalp )
-				   (items-in-group g3)
-				   :test #'equalp)))
-	     
-	       ;; assert that all children should actually be in this group
-	       (when (parent-grouping g1)
-		 (let ((pk (key-value g1)))
-		   (when pk 
-		     (let* ((test (first (tests (parent-grouping g1))))
-			    (key (first (keys (parent-grouping g1)))))
-		       (iter (for item in (items-in-group g1))
-			     (assert-true (funcall test (funcall key item) pk))))))))
-	   
-	     ;; A function to run the tests on each sub grouping tree
-	     (recursert (g1 g2 g3)
-	       ;;(break "recursert:~%~a~%~a~%~a" g1 g2 g3)
-	       (assertions g1 g2 g3)
-	       (let* ((k1 (child-groupings g1))
-		      (k2 (child-groupings g2))
-		      (k3 (child-groupings g2))
-		      (pred (when k1
-			      (if (numberp (key-value (first k1)))
-				  #'<
-				  #'string<))))
-		 (when k1
-		   (setf k1 (sort k1 pred :key #'key-value))
-		   (setf k2 (sort k2 pred :key #'key-value))
-		   (setf k3 (sort k3 pred :key #'key-value)))
-		 (iter (for kg1 in k1)
-		       (for kg2 in k2)
-		       (for kg3 in k3)
-		       (recursert kg1 kg2 kg3)))))
+               ;; all grouped lists contain the same number of children
+               (assert-true (apply #'= (mapcar
+                                        (lambda (x) (length (items-in-group x)))
+                                        (list g1 g2 g3))))
+
+               ;; all grouped lists contain the same data
+               (assert-true (null (set-difference
+                                   (set-difference
+                                    (items-in-group g1)
+                                    (items-in-group g2)
+                                    :test #'equalp )
+                                   (items-in-group g3)
+                                   :test #'equalp)))
+
+               ;; assert that all children should actually be in this group
+               (when (parent-grouping g1)
+                 (let ((pk (key-value g1)))
+                   (when pk
+                     (let* ((test (first (tests (parent-grouping g1))))
+                            (key (first (keys (parent-grouping g1)))))
+                       (iter (for item in (items-in-group g1))
+                             (assert-true (funcall test (funcall key item) pk))))))))
+
+             ;; A function to run the tests on each sub grouping tree
+             (recursert (g1 g2 g3)
+               ;;(break "recursert:~%~a~%~a~%~a" g1 g2 g3)
+               (assertions g1 g2 g3)
+               (let* ((k1 (child-groupings g1))
+                      (k2 (child-groupings g2))
+                      (k3 (child-groupings g2))
+                      (pred (when k1
+                              (if (numberp (key-value (first k1)))
+                                  #'<
+                                  #'string<))))
+                 (when k1
+                   (setf k1 (sort k1 pred :key #'key-value))
+                   (setf k2 (sort k2 pred :key #'key-value))
+                   (setf k3 (sort k3 pred :key #'key-value)))
+                 (iter (for kg1 in k1)
+                       (for kg2 in k2)
+                       (for kg3 in k3)
+                       (recursert kg1 kg2 kg3)))))
       (let* ((data (test-data num-rows depth))
-	     (lgl (make-test-data-instance data :grouping-implementation :alist))
-	     (tgl (make-test-data-instance data :grouping-implementation :hash-table))
-	     (hgl (make-test-data-instance data :grouping-implementation :tree)))
-	(recursert lgl tgl hgl)))))
+             (lgl (make-test-data-instance data :grouping-implementation :alist))
+             (tgl (make-test-data-instance data :grouping-implementation :hash-table))
+             (hgl (make-test-data-instance data :grouping-implementation :tree)))
+        (recursert lgl tgl hgl)))))
 
 (defun %run-creation-speed-tests (&key (num-rows 1000) (depth 5) (times 10))
   (macrolet ((time-to-log (&body body)
-	       `(info
-		 (with-output-to-string (*trace-output*)
-		   (time (progn ,@body))))))
+               `(info
+                 (with-output-to-string (*trace-output*)
+                   (time (progn ,@body))))))
     (let ((test-data (iter (for i from 1 to times)
-			   (collect (test-data num-rows depth)))))
+                           (collect (test-data num-rows depth)))))
       (info "Grouping Implentation Speed Tests" )
       (info "~%~%HASH-TABLE Implementation~%" )
       (time-to-log
        (iter (for data in test-data)
-	     (make-test-data-instance data :grouping-implementation :hash-table)))
-      (info "~%~%TREE Implementation~%" )   
+             (make-test-data-instance data :grouping-implementation :hash-table)))
+      (info "~%~%TREE Implementation~%" )
       (time-to-log
        (iter (for data in test-data)
-	     (make-test-data-instance data :grouping-implementation :tree)))
+             (make-test-data-instance data :grouping-implementation :tree)))
       (info "~%~%ALIST Implementation~%" )
       (time-to-log
        (iter (for data in test-data)
-	     (make-test-data-instance data :grouping-implementation :alist))))))
+             (make-test-data-instance data :grouping-implementation :alist))))))
 
 (define-test run-creation-speed-tests
   (%run-creation-speed-tests))
