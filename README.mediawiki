@@ -86,13 +86,8 @@ of the items that list groups (leaf nodes of the tree).
 When called as (items-in-group gl "russ" :proj-a) returns the items under
 the key proj-A that are found under toplevel key "russ"
 
-=== group-by-repeated, group-by-repeated-in-hash-table, group-by-repeated-in-tree ===
-
-Three functions used in implementing grouped-lists. While these can be
-used directly with the same set of arguments as make-grouped-list, the
-results are more raw, and harder to navigate.  It is therefore
-suggested that you use make-grouped-list unless you have a good reason
-not to (and I cannot think of one currently).
+=== group-by-repeated ===
+Sames as group-by, but groups on multiple keys and tests (into an alist tree)
 
 == Examples ==
 
