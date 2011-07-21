@@ -1,5 +1,5 @@
 (defpackage :group-by
-  (:use :cl :cl-user :iter)
+  (:use :cl :cl-user :iterate)
   (:export
    :group-by
    :categorize-item
