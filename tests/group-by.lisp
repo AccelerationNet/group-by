@@ -194,4 +194,4 @@ the vector ALPHABET.
 
 (define-test run-creation-speed-tests (%run-creation-speed-tests))
 
-(run-tests )
+(run-tests :all)
