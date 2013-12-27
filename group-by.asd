@@ -23,10 +23,13 @@ formats) based on common/shared values"
   :components ((:module :tests
 			:serial t
 			:components ((:file "group-by"))))
-  :depends-on (:group-by :lisp-unit))
+  :depends-on (:group-by :lisp-unit2))
 
 (defmethod asdf:perform ((o asdf:test-op) (c (eql (find-system :group-by))))
-  (asdf:oos 'asdf:load-op :group-by-test))
+  (asdf:oos 'asdf:load-op :group-by-test)
+  (let ((*package* (find-package :group-by-test)))
+    (eval (read-from-string "(with-summary (:name :group-by)
+                                (run-tests :package :group-by-test))"))))
 
 ;; Copyright (c) 2011 Russ Tyndall , Acceleration.net http://www.acceleration.net
 

@@ -1,5 +1,5 @@
 (defpackage :group-by-test
-  (:use :cl :cl-user :group-by :lisp-unit :iter))
+  (:use :cl :cl-user :group-by :lisp-unit2 :iter))
 
 (in-package :group-by-test)
 
@@ -82,7 +82,7 @@ the vector ALPHABET.
     ("Bob" 1 "time on proj C")
     ("Russ" 4 "time on proj C")))
 
-(define-test basic-group-by
+(define-test basic-group-by ()
   (let ((res (group-by +test-timeclock-data+)))
     (assert-equal 2 (length res) "Grouped by the two employees")
     (assert-equal
@@ -97,9 +97,8 @@ the vector ALPHABET.
      "Bob had 4 records")
     ))
 
-(define-test basic-group-by-2
-  (let* ((data (second (test-data 25 3)))
-         (res (group-by (second (test-data 25 3))
+(define-test basic-group-by-2 ()
+  (let* ((res (group-by (second (test-data 25 3))
                         :key #'(lambda (s) (elt s 1))
                         :value #'identity
                         :test #'string-equal)))
@@ -111,9 +110,8 @@ the vector ALPHABET.
            (assert-equal 25 row-cnt)))
     ))
 
-(define-test basic-grouped-list
-  (let* ((data (second (test-data 25 3)))
-         (res (make-grouped-list
+(define-test basic-grouped-list ()
+  (let* ((res (make-grouped-list
                (second (test-data 25 3))
                :keys (list #'(lambda (s) (elt s 1))))))
     (iter
@@ -124,10 +122,11 @@ the vector ALPHABET.
     (assert-equal 25 (length (items-in-group res)))
     ))
 
-(define-test basic-grouped-list2
-  (apply #'make-instance 'grouped-list (test-data 25 3)))
+(define-test basic-grouped-list2 ()
+  (assert-true
+   (apply #'make-instance 'grouped-list (test-data 25 3))))
 
-(define-test run-accuracy-tests
+(define-test run-accuracy-tests ()
   (let ((num-rows 1000) (depth 5))
     (labels ((assertions (g1 g2)
                ;; all grouped lists contain the same number of children
@@ -184,14 +183,14 @@ the vector ALPHABET.
       (time-to-log
        (iter (for data in test-data)
              (make-test-data-instance data :grouping-implementation :hash-table)))
-      
+
       (info "~%LIST Implementation~%" )
       (time-to-log
        (iter (for data in test-data)
              (make-test-data-instance data :grouping-implementation :list)))
-      
+
       )))
 
-(define-test run-creation-speed-tests (%run-creation-speed-tests))
+(define-test run-creation-speed-tests (:tags '(speed))
+  (%run-creation-speed-tests))
 
-(run-tests :all)
