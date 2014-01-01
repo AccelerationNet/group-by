@@ -28,8 +28,10 @@ formats) based on common/shared values"
 (defmethod asdf:perform ((o asdf:test-op) (c (eql (find-system :group-by))))
   (asdf:oos 'asdf:load-op :group-by-test)
   (let ((*package* (find-package :group-by-test)))
-    (eval (read-from-string "(with-summary (:name :group-by)
-                                (run-tests :package :group-by-test))"))))
+    (eval (read-from-string "
+          (run-tests :package :group-by-test
+                     :name :group-by
+                     :run-contexts #'with-summary-context)"))))
 
 ;; Copyright (c) 2011 Russ Tyndall , Acceleration.net http://www.acceleration.net
 
