@@ -28,18 +28,19 @@ test is passed as the :test to assoc
 
 eg: (group-by '((a 1 2) (a 3 4) (b 5 6)))
 => ((A (1 2) (3 4)) (B (5 6)))"
+  ;; we keep 2 alist -  ( key . value-list-head ) & ( key . value-list-tail )
+  ;; so we can collect at the end (which saves us infinitesimal time and space)
   (iter (for i in list)
-        (for k = (funcall key i))
-        (for v = (funcall value i))
-        (for cell = (assoc k results :test test :key key-fn))
-        (if cell
-            (push v (cdr cell))
-            (collect (list k v) into results))
-        (finally
-         ;; reverse the values so that they appear in the same
-         ;; sort order as previously
-         (return (iter (for (k .  vals) in results)
-                       (collect (cons k (nreverse vals))))))))
+    (for k = (funcall key i))
+    (for v = (cons (funcall value i) nil))
+    (for cell = (assoc k tails :test test :key key-fn))
+    (cond
+      (cell (setf (cddr cell) v
+                  (cdr cell) v))
+      (t               ;; dont reuse this cons cell, we want two distinct ones
+       (collect (cons k v) into results)
+       (collect (cons k v) into tails)))
+    (finally (return results))))
 
 (defgeneric categorize-item (item root &key &allow-other-keys )
   (:documentation "Insert a new item into a grouped list "))
@@ -206,7 +207,7 @@ of grouped-list objects
       (%grouping-items subgroup))))
 
 (defun grouped-list-speed-tester (&key list keys tests hash-tests (iterations 10) actions)
-  "A function to help asses which implementation will work best in your given scenario
+  "A function to help assess which implementation will work best in your given scenario
    actions : (lambda (gl) ...) -to help test whatever grouped list
              operations you will need to do repeatedly
 
